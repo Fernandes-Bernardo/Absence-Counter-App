@@ -74,7 +74,7 @@ fun HomeScreen() {
 
     Scaffold(
         bottomBar = {
-            FooterFigmaStyled()
+            Footer()
         }
     ) { innerPadding ->
         Column(
@@ -94,7 +94,7 @@ fun HomeScreen() {
 }
 
 @Composable
-fun FooterFigmaStyled() {
+fun Footer() {
 
     val purpleBackground = Color(0xFF9C84FF)
     val ellipseColor = Color(0xFFF4EFFF)
