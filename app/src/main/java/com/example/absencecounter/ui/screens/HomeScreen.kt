@@ -21,56 +21,62 @@ import com.example.absencecounter.ui.components.ExpandableDayCard
 @Composable
 fun HomeScreen() {
 
-    val mockData = remember {
-        listOf(
-            DaySchedule(
-                dayName = "Segunda-feira",
-                subjects = listOf(
-                    SubjectAbsence("Matemática", 3),
-                    SubjectAbsence("História", 2),
-                    SubjectAbsence("Ed. Física", 0),
-                    SubjectAbsence("Projeto", 1),
-                    SubjectAbsence("Física", 2)
-                )
-            ),
-            DaySchedule(
-                dayName = "Terça-feira",
-                subjects = listOf(
-                    SubjectAbsence("Geografia", 4),
-                    SubjectAbsence("Química", 2),
-                    SubjectAbsence("Sociologia", 1),
-                    SubjectAbsence("Biologia", 3)
-                )
-            ),
-            DaySchedule(
-                dayName = "Quarta-feira",
-                subjects = listOf(
-                    SubjectAbsence("Química", 3),
-                    SubjectAbsence("Biologia", 5),
-                    SubjectAbsence("Geografia", 4),
-                    SubjectAbsence("Matemática", 2)
-                )
-            ),
-            DaySchedule(
-                dayName = "Quinta-feira",
-                subjects = listOf(
-                    SubjectAbsence("Geografia", 4),
-                    SubjectAbsence("Português", 2),
-                    SubjectAbsence("Sociologia", 1),
-                    SubjectAbsence("Química", 2)
-                )
-            ),
-            DaySchedule(
-                dayName = "Sexta-feira",
-                subjects = listOf(
-                    SubjectAbsence("Projeto", 0),
-                    SubjectAbsence("História", 1),
-                    SubjectAbsence("Filosofia", 0),
-                    SubjectAbsence("Ed. Física", 0)
+    var days by remember {
+        mutableStateOf(
+            listOf(
+                DaySchedule(
+                    dayName = "Segunda-feira",
+                    subjects = listOf(
+                        SubjectAbsence("Matemática", 3),
+                        SubjectAbsence("História", 2),
+                        SubjectAbsence("Ed. Física", 0),
+                        SubjectAbsence("Projeto", 1),
+                        SubjectAbsence("Física", 2)
+                    )
+                ),
+                DaySchedule(
+                    dayName = "Terça-feira",
+                    subjects = listOf(
+                        SubjectAbsence("Geografia", 4),
+                        SubjectAbsence("Química", 2),
+                        SubjectAbsence("Sociologia", 1),
+                        SubjectAbsence("Biologia", 3)
+                    )
+                ),
+                DaySchedule(
+                    dayName = "Quarta-feira",
+                    subjects = listOf(
+                        SubjectAbsence("Química", 3),
+                        SubjectAbsence("Biologia", 5),
+                        SubjectAbsence("Geografia", 4),
+                        SubjectAbsence("Matemática", 2)
+                    )
+                ),
+                DaySchedule(
+                    dayName = "Quinta-feira",
+                    subjects = listOf(
+                        SubjectAbsence("Geografia", 4),
+                        SubjectAbsence("Português", 2),
+                        SubjectAbsence("Sociologia", 1),
+                        SubjectAbsence("Química", 2)
+                    )
+                ),
+                DaySchedule(
+                    dayName = "Sexta-feira",
+                    subjects = listOf(
+                        SubjectAbsence("Projeto", 0),
+                        SubjectAbsence("História", 1),
+                        SubjectAbsence("Filosofia", 0),
+                        SubjectAbsence("Ed. Física", 0)
+                    )
                 )
             )
         )
     }
+
+    // Controle do popup
+    var showEditModal by remember { mutableStateOf(false) }
+    var editingDayIndex by remember { mutableStateOf<Int?>(null) }
 
     Scaffold(
         bottomBar = {
@@ -83,12 +89,42 @@ fun HomeScreen() {
                 .padding(horizontal = 12.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            mockData.forEach { schedule ->
-                ExpandableDayCard(schedule = schedule)
+
+            days.forEachIndexed { index, schedule ->
+                ExpandableDayCard(
+                    schedule = schedule,
+                    onEditClicked = {
+                        editingDayIndex = index
+                        showEditModal = true
+                    }
+                )
+
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
             Spacer(modifier = Modifier.height(150.dp))
+        }
+
+        if (showEditModal && editingDayIndex != null) {
+            EditGradeScreen(
+                initialSubjects = days[editingDayIndex!!].subjects,
+
+                onBack = {
+                    showEditModal = false
+                    editingDayIndex = null
+                },
+
+                // Salva alterações
+                onSave = { updatedSubjects ->
+                    val idx = editingDayIndex!!
+                    val newList = days.toMutableList()
+                    newList[idx] = days[idx].copy(subjects = updatedSubjects)
+                    days = newList.toList()
+
+                    showEditModal = false
+                    editingDayIndex = null
+                }
+            )
         }
     }
 }
