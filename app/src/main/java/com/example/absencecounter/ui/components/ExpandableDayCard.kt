@@ -24,7 +24,8 @@ import com.example.absencecounter.data.model.DaySchedule
 import com.example.absencecounter.data.model.SubjectAbsence
 
 /**
- * Card expansível que mostra o dia e, quando expandido, lista as matérias com faltas.
+ * Card expansível que mostra o dia e,
+ * quando expandido, lista as matérias com suas faltas.
  */
 @Composable
 fun ExpandableDayCard(
@@ -40,6 +41,7 @@ fun ExpandableDayCard(
             .padding(horizontal = 18.dp, vertical = 10.dp)
             .animateContentSize()
     ) {
+
         // Header
         Surface(
             shape = RoundedCornerShape(28.dp),
@@ -57,6 +59,7 @@ fun ExpandableDayCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+
                 Text(
                     text = schedule.dayName,
                     style = MaterialTheme.typography.titleLarge,
@@ -64,13 +67,14 @@ fun ExpandableDayCard(
                 )
 
                 Icon(
-                    imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    imageVector =
+                        if (expanded) Icons.Filled.KeyboardArrowUp
+                        else Icons.Filled.KeyboardArrowDown,
                     contentDescription = if (expanded) "Fechar" else "Abrir"
                 )
             }
         }
 
-        // Conteúdo expandido
         if (expanded) {
             Surface(
                 shape = RoundedCornerShape(28.dp),
@@ -80,7 +84,9 @@ fun ExpandableDayCard(
                     .padding(top = 8.dp)
                     .fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
 
                     schedule.subjects.forEach { subject: SubjectAbsence ->
                         Text(
@@ -90,7 +96,6 @@ fun ExpandableDayCard(
                         )
                     }
 
-                    // Footer
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -99,19 +104,23 @@ fun ExpandableDayCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
 
-                        IconButton(onClick = { onEditClicked(schedule.dayName) }) {
+                        IconButton(
+                            onClick = { onEditClicked(schedule.dayName) }
+                        ) {
                             Icon(
                                 imageVector = Icons.Filled.Edit,
-                                contentDescription = "Editar"
+                                contentDescription = "Editar grade"
                             )
                         }
 
                         Spacer(modifier = Modifier.width(6.dp))
 
-                        IconButton(onClick = { onAddClicked(schedule.dayName) }) {
+                        IconButton(
+                            onClick = { onAddClicked(schedule.dayName) }
+                        ) {
                             Icon(
                                 imageVector = Icons.Filled.Add,
-                                contentDescription = "Adicionar"
+                                contentDescription = "Adicionar falta"
                             )
                         }
                     }
