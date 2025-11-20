@@ -23,7 +23,7 @@ class SubjectRepository(
     )
 
     private fun Int.toDayName(): String = dayNames[this] ?: "Desconhecido"
-    
+
     fun getWeekSchedule(): Flow<List<DaySchedule>> {
         return subjectDao.getAllSubjectsWithAbsences().map { list ->
 

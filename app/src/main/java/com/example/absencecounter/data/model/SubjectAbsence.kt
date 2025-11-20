@@ -5,6 +5,7 @@ package com.example.absencecounter.data.model
  * Este é um modelo simples que será preenchido pelo banco
  */
 data class SubjectAbsence(
+    val id: Int,
     val name: String,
     val absences: Int
 )
