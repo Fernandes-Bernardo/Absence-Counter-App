@@ -10,17 +10,23 @@ import com.example.absencecounter.data.database.entities.SubjectEntity
 @Dao
 interface SubjectDao {
 
-    @Query("SELECT * FROM subjects WHERE dayOfWeek = :dayOfWeek ORDER BY id ASC")
+    @Query("SELECT * FROM subjects ORDER BY dayOfWeek ASC, orderInDay ASC")
+    suspend fun getAllSubjects(): List<SubjectEntity>
+
+    @Query("SELECT * FROM subjects WHERE dayOfWeek = :dayOfWeek ORDER BY orderInDay ASC")
     suspend fun getSubjectsByDay(dayOfWeek: Int): List<SubjectEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSubject(subject: SubjectEntity)
+    suspend fun insertSubject(subject: SubjectEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSubjects(subjects: List<SubjectEntity>)
 
     @Update
     suspend fun updateSubject(subject: SubjectEntity)
+
+    @Query("DELETE FROM subjects WHERE dayOfWeek = :dayOfWeek")
+    suspend fun deleteSubjectsOfDay(dayOfWeek: Int)
 
     @Query("DELETE FROM subjects")
     suspend fun clearAll()

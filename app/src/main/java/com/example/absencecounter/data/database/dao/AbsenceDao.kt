@@ -9,7 +9,7 @@ import com.example.absencecounter.data.database.entities.AbsenceEntity
 interface AbsenceDao {
 
     @Insert
-    suspend fun insertAbsence(absence: AbsenceEntity)
+    suspend fun insertAbsence(absence: AbsenceEntity): Long
 
     @Insert
     suspend fun insertAbsences(absences: List<AbsenceEntity>)
