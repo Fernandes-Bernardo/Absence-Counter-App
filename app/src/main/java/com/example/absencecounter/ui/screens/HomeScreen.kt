@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.absencecounter.data.model.DaySchedule
 import com.example.absencecounter.data.model.SubjectAbsence
+import com.example.absencecounter.ui.components.AddAbsenceDialog
 import com.example.absencecounter.ui.components.ExpandableDayCard
 
 @Composable
@@ -74,14 +75,20 @@ fun HomeScreen() {
         )
     }
 
-    // Controle do popup
+    // ===========================
+    //   MODAL DE EDITAR GRADE
+    // ===========================
     var showEditModal by remember { mutableStateOf(false) }
     var editingDayIndex by remember { mutableStateOf<Int?>(null) }
 
+    // ===========================
+    //   MODAL DE ADICIONAR FALTA
+    // ===========================
+    var showAddModal by remember { mutableStateOf(false) }
+    var addingDayIndex by remember { mutableStateOf<Int?>(null) }
+
     Scaffold(
-        bottomBar = {
-            Footer()
-        }
+        bottomBar = { Footer() }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -91,11 +98,18 @@ fun HomeScreen() {
         ) {
 
             days.forEachIndexed { index, schedule ->
+
                 ExpandableDayCard(
                     schedule = schedule,
+
                     onEditClicked = {
                         editingDayIndex = index
                         showEditModal = true
+                    },
+
+                    onAddClicked = {
+                        addingDayIndex = index
+                        showAddModal = true
                     }
                 )
 
@@ -105,6 +119,9 @@ fun HomeScreen() {
             Spacer(modifier = Modifier.height(150.dp))
         }
 
+        // =====================================
+        //  MODAL DE EDITAR GRADE (JÁ EXISTENTE)
+        // =====================================
         if (showEditModal && editingDayIndex != null) {
             EditGradeScreen(
                 initialSubjects = days[editingDayIndex!!].subjects,
@@ -114,7 +131,6 @@ fun HomeScreen() {
                     editingDayIndex = null
                 },
 
-                // Salva alterações
                 onSave = { updatedSubjects ->
                     val idx = editingDayIndex!!
                     val newList = days.toMutableList()
@@ -123,6 +139,51 @@ fun HomeScreen() {
 
                     showEditModal = false
                     editingDayIndex = null
+                }
+            )
+        }
+
+        // =========================================
+        //   MODAL DE ADICIONAR FALTA — NOVO 🎉
+        // =========================================
+        if (showAddModal && addingDayIndex != null) {
+
+            val dayIndex = addingDayIndex!!
+            val subjectsOfDay = days[dayIndex].subjects
+
+            AddAbsenceDialog(
+                dayName = days[dayIndex].dayName,
+                subjects = subjectsOfDay,
+
+                onDismiss = {
+                    showAddModal = false
+                    addingDayIndex = null
+                },
+
+                onConfirm = { selectedIndices, isFullDay ->
+
+                    val newDays = days.toMutableList()
+
+                    val updatedSubjects =
+                        if (isFullDay) {
+                            // Dia todo → soma 1 falta em todas as matérias
+                            subjectsOfDay.map { subject ->
+                                subject.copy(absences = subject.absences + 1)
+                            }
+                        } else {
+                            // Seleção de horários individuais
+                            subjectsOfDay.mapIndexed { idx, subject ->
+                                if (selectedIndices.contains(idx))
+                                    subject.copy(absences = subject.absences + 1)
+                                else subject
+                            }
+                        }
+
+                    newDays[dayIndex] = days[dayIndex].copy(subjects = updatedSubjects)
+                    days = newDays.toList()
+
+                    showAddModal = false
+                    addingDayIndex = null
                 }
             )
         }
