@@ -4,30 +4,30 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
+import com.example.absencecounter.data.model.SubjectWithAbsences
 import com.example.absencecounter.data.database.entities.SubjectEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SubjectDao {
 
-    @Query("SELECT * FROM subjects ORDER BY dayOfWeek ASC, orderInDay ASC")
-    suspend fun getAllSubjects(): List<SubjectEntity>
-
-    @Query("SELECT * FROM subjects WHERE dayOfWeek = :dayOfWeek ORDER BY orderInDay ASC")
-    suspend fun getSubjectsByDay(dayOfWeek: Int): List<SubjectEntity>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSubject(subject: SubjectEntity): Long
+    suspend fun insertSubject(subject: SubjectEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSubjects(subjects: List<SubjectEntity>)
+    @Query("DELETE FROM subjects WHERE dayOfWeek = :day")
+    suspend fun deleteSubjectsOfDay(day: Int)
 
-    @Update
-    suspend fun updateSubject(subject: SubjectEntity)
-
-    @Query("DELETE FROM subjects WHERE dayOfWeek = :dayOfWeek")
-    suspend fun deleteSubjectsOfDay(dayOfWeek: Int)
-
-    @Query("DELETE FROM subjects")
-    suspend fun clearAll()
+    @Query(
+        """
+        SELECT s.id AS subjectId,
+               s.name AS name,
+               s.dayOfWeek AS dayOfWeek,
+               COUNT(a.id) AS absences
+        FROM subjects s
+        LEFT JOIN absences a ON a.subjectId = s.id
+        GROUP BY s.id
+        ORDER BY s.dayOfWeek ASC
+        """
+    )
+    fun getAllSubjectsWithAbsences(): Flow<List<SubjectWithAbsences>>
 }

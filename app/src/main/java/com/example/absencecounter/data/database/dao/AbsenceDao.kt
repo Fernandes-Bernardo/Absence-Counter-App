@@ -20,3 +20,4 @@ interface AbsenceDao {
     @Query("DELETE FROM absences")
     suspend fun clearAll()
 }
+

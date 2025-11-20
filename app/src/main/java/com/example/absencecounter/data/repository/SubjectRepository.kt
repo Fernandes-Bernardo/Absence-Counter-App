@@ -6,61 +6,75 @@ import com.example.absencecounter.data.database.entities.AbsenceEntity
 import com.example.absencecounter.data.database.entities.SubjectEntity
 import com.example.absencecounter.data.model.DaySchedule
 import com.example.absencecounter.data.model.SubjectAbsence
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class SubjectRepository(
     private val subjectDao: SubjectDao,
     private val absenceDao: AbsenceDao
 ) {
 
-    suspend fun getWeekSchedule(): List<DaySchedule> {
-        val allSubjects = subjectDao.getAllSubjects()
+    private val dayNames = mapOf(
+        1 to "Segunda-feira",
+        2 to "Terça-feira",
+        3 to "Quarta-feira",
+        4 to "Quinta-feira",
+        5 to "Sexta-feira"
+    )
 
-        val grouped: Map<Int, List<SubjectEntity>> = allSubjects.groupBy { it.dayOfWeek }
-        
-        val result = mutableListOf<DaySchedule>()
-        for (day in 1..5) {
-            val subjectsOfDay = grouped[day].orEmpty()
-            val uiSubjects = subjectsOfDay.map { subjectEntity ->
-                val count = absenceDao.getAbsenceCountForSubject(subjectEntity.id)
-                SubjectAbsence(name = subjectEntity.name, absences = count)
+    private fun Int.toDayName(): String = dayNames[this] ?: "Desconhecido"
+    
+    fun getWeekSchedule(): Flow<List<DaySchedule>> {
+        return subjectDao.getAllSubjectsWithAbsences().map { list ->
+
+            val grouped = list.groupBy { it.dayOfWeek }
+
+            grouped.map { (dayNumber, subjectsOfDay) ->
+
+                val subjectsMapped = subjectsOfDay.map { s ->
+                    SubjectAbsence(
+                        name = s.name,
+                        absences = s.absences
+                    )
+                }
+
+                DaySchedule(
+                    dayName = dayNumber.toDayName(),
+                    subjects = subjectsMapped
+                )
             }
-            val dayName = when (day) {
-                1 -> "Segunda-feira"
-                2 -> "Terça-feira"
-                3 -> "Quarta-feira"
-                4 -> "Quinta-feira"
-                5 -> "Sexta-feira"
-                else -> "Dia $day"
-            }
-            result.add(DaySchedule(dayName = dayName, subjects = uiSubjects))
         }
-        return result
     }
 
-    suspend fun getSubjectIdsForDay(dayOfWeek: Int): List<Int> {
-        return subjectDao.getSubjectsByDay(dayOfWeek).map { it.id }
-    }
-
-    suspend fun addAbsencesForSubjectIds(subjectIds: List<Int>) {
-        if (subjectIds.isEmpty()) return
+    suspend fun addAbsences(subjectIds: List<Int>) {
         val now = System.currentTimeMillis()
-        val absences = subjectIds.map { id ->
-            AbsenceEntity(subjectId = id, timestamp = now)
+
+        subjectIds.forEach { id ->
+            absenceDao.insertAbsence(
+                AbsenceEntity(
+                    subjectId = id,
+                    timestamp = now
+                )
+            )
         }
-        absenceDao.insertAbsences(absences)
     }
 
-    suspend fun updateDaySubjects(dayOfWeek: Int, newSubjects: List<String>) {
+    suspend fun updateDaySubjects(
+        dayName: String,
+        newSubjects: List<String>
+    ) {
+        val dayNumber = dayNames.entries.first { it.value == dayName }.key
 
-        subjectDao.deleteSubjectsOfDay(dayOfWeek)
+        subjectDao.deleteSubjectsOfDay(dayNumber)
 
-        val entities = newSubjects.mapIndexed { idx, name ->
-            SubjectEntity(name = name, dayOfWeek = dayOfWeek, orderInDay = idx + 1)
+        newSubjects.forEachIndexed { index, name ->
+            subjectDao.insertSubject(
+                SubjectEntity(
+                    name = name,
+                    dayOfWeek = dayNumber,
+                    orderInDay = index
+                )
+            )
         }
-        subjectDao.insertSubjects(entities)
-    }
-
-    suspend fun insertSubject(entity: SubjectEntity) {
-        subjectDao.insertSubject(entity)
     }
 }
